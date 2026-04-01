@@ -13,12 +13,13 @@ final class ConnectionManager: ObservableObject {
     @Published var lastError: String?
     @Published var pendingHostKeyChallenge: HostKeyChallenge?
 
-    private let hostTrustStore: HostKeyTrustStore
+    private let knownHostsService: KnownHostsService
     private let client: SFTPClientProtocol
     private var hostKeyDecisionContinuation: CheckedContinuation<Bool, Never>?
+    private var pendingKnownHostsLine: String?
 
-    init(hostTrustStore: HostKeyTrustStore, client: SFTPClientProtocol = MockSFTPClient()) {
-        self.hostTrustStore = hostTrustStore
+    init(knownHostsService: KnownHostsService, client: SFTPClientProtocol = MockSFTPClient()) {
+        self.knownHostsService = knownHostsService
         self.client = client
     }
 
@@ -88,31 +89,35 @@ final class ConnectionManager: ObservableObject {
     }
 
     func acceptPendingHostKey() {
+        if let line = pendingKnownHostsLine {
+            try? knownHostsService.trust(knownHostsLine: line)
+        }
         hostKeyDecisionContinuation?.resume(returning: true)
         hostKeyDecisionContinuation = nil
         pendingHostKeyChallenge = nil
+        pendingKnownHostsLine = nil
     }
 
     func rejectPendingHostKey() {
         hostKeyDecisionContinuation?.resume(returning: false)
         hostKeyDecisionContinuation = nil
         pendingHostKeyChallenge = nil
+        pendingKnownHostsLine = nil
     }
 
     private func verifyHostTrust(for profile: ServerProfile) async throws {
-        let fakeFingerprint = "FA:KE:DE:MO:HO:ST:KEY"
-        if hostTrustStore.isTrusted(host: profile.host, fingerprint: fakeFingerprint) {
+        let needed = try await knownHostsService.verificationNeeded(host: profile.host, port: profile.port)
+        guard let needed else {
             return
         }
 
-        pendingHostKeyChallenge = HostKeyChallenge(host: profile.host, fingerprint: fakeFingerprint)
+        pendingKnownHostsLine = needed.knownHostsLine
+        pendingHostKeyChallenge = HostKeyChallenge(host: needed.host, fingerprint: needed.fingerprint)
         let accepted = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
             hostKeyDecisionContinuation = continuation
         }
 
-        if accepted {
-            hostTrustStore.trust(host: profile.host, fingerprint: fakeFingerprint)
-        } else {
+        if !accepted {
             throw SFTPError.hostKeyUntrusted
         }
     }

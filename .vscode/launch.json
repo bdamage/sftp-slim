@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:sftp-slim}/SFTPSlim",
+            "name": "Debug SFTPSlim (SFTPSlim)",
+            "target": "SFTPSlim",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug SFTPSlim (SFTPSlim)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:sftp-slim}/SFTPSlim",
+            "name": "Release SFTPSlim (SFTPSlim)",
+            "target": "SFTPSlim",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release SFTPSlim (SFTPSlim)"
+        }
+    ]
+}

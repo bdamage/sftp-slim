@@ -26,15 +26,23 @@ Native-feeling macOS SFTP client MVP built with SwiftUI and MVVM.
 
 ## Notes on SFTP Library
 
-The project ships with `MockSFTPClient` so the UI and architecture are fully testable.
-For production SFTP, wire `ConnectionManager` to a real client implementation using a Swift/macOS-compatible SSH/SFTP library such as Citadel or a libssh2 wrapper.
+The project now uses `OpenSSHSFTPClient` (system `ssh`/`scp`) as the active transport backend.
+`MockSFTPClient` remains in the source tree for UI development and isolated testing.
+
+Authentication support:
+- Private key auth via key path or key material stored in Keychain
+- Password auth via temporary `SSH_ASKPASS` helper
+- Optional key passphrase support via `SSH_ASKPASS`
+
+This avoids third-party binary dependencies and works on standard macOS installations with OpenSSH.
 
 ## Security Notes
 
 - Password/private key/passphrase are stored only in Keychain.
 - Secrets are not written to logs.
-- Host trust prompt is implemented with trust-on-first-use behavior backed by `HostKeyTrustStore`.
-- For production, replace demo fingerprints with real server key fingerprints and persist in known_hosts-compatible storage.
+- Host trust prompt is implemented with trust-on-first-use behavior backed by the local `known_hosts` workflow.
+- Fingerprints are obtained via `ssh-keyscan` and displayed from `ssh-keygen -lf` before trust.
+- Host key verification is now integrated with `~/.ssh/known_hosts` using `ssh-keyscan` and `ssh-keygen -lf` fingerprint display.
 
 ## Suggested Next Steps
 
