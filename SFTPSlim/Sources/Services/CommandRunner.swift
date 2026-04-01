@@ -77,7 +77,9 @@ struct CommandRunner {
         stdin: String? = nil
     ) async throws -> CommandResult {
         try await Task.detached(priority: .userInitiated) {
-            try run(executable: executable, arguments: arguments, environment: environment, stdin: stdin)
+            try run(
+                executable: executable, arguments: arguments, environment: environment, stdin: stdin
+            )
         }.value
     }
 }

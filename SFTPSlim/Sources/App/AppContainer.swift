@@ -13,6 +13,7 @@ final class AppContainer: ObservableObject {
         self.serverStore = ServerStore()
         self.transferManager = TransferManager()
         let client = OpenSSHSFTPClient(knownHostsPath: knownHostsService.knownHostsPath)
-        self.connectionManager = ConnectionManager(knownHostsService: knownHostsService, client: client)
+        self.connectionManager = ConnectionManager(
+            knownHostsService: knownHostsService, client: client)
     }
 }

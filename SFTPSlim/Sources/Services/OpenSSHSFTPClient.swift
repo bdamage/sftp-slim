@@ -43,7 +43,8 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
             let isDirectory = fields[0].first == "d"
             let size = Int64(fields[4]) ?? 0
             let fullPath = URL(fileURLWithPath: path).appendingPathComponent(name).path
-            items.append(FileItem(path: fullPath, isDirectory: isDirectory, size: size, modifiedAt: Date()))
+            items.append(
+                FileItem(path: fullPath, isDirectory: isDirectory, size: size, modifiedAt: Date()))
         }
         return items
     }
@@ -71,7 +72,9 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
         _ = try await runSSH(profile: profile, secrets: secrets, remoteCommand: command)
     }
 
-    func upload(localPath: String, remotePath: String, progress: @escaping (Int64, Int64) -> Void) async throws {
+    func upload(localPath: String, remotePath: String, progress: @escaping (Int64, Int64) -> Void)
+        async throws
+    {
         let (profile, secrets) = try requireConnection()
 
         let attributes = try? FileManager.default.attributesOfItem(atPath: localPath)
@@ -82,7 +85,7 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
         var args = [
             "-P", String(profile.port),
             "-o", "StrictHostKeyChecking=yes",
-            "-o", "UserKnownHostsFile=\(knownHostsPath)"
+            "-o", "UserKnownHostsFile=\(knownHostsPath)",
         ]
         let auth = try buildAuth(profile: profile, secrets: secrets)
         args.append(contentsOf: auth.arguments)
@@ -106,14 +109,16 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
         progress(max(total, 1), max(total, 1))
     }
 
-    func download(remotePath: String, localPath: String, progress: @escaping (Int64, Int64) -> Void) async throws {
+    func download(remotePath: String, localPath: String, progress: @escaping (Int64, Int64) -> Void)
+        async throws
+    {
         let (profile, secrets) = try requireConnection()
         progress(0, 1)
 
         var args = [
             "-P", String(profile.port),
             "-o", "StrictHostKeyChecking=yes",
-            "-o", "UserKnownHostsFile=\(knownHostsPath)"
+            "-o", "UserKnownHostsFile=\(knownHostsPath)",
         ]
         let auth = try buildAuth(profile: profile, secrets: secrets)
         args.append(contentsOf: auth.arguments)
@@ -139,11 +144,13 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
         progress(1, 1)
     }
 
-    private func runSSH(profile: ServerProfile, secrets: ServerSecrets, remoteCommand: String) async throws -> String {
+    private func runSSH(profile: ServerProfile, secrets: ServerSecrets, remoteCommand: String)
+        async throws -> String
+    {
         var args = [
             "-p", String(profile.port),
             "-o", "StrictHostKeyChecking=yes",
-            "-o", "UserKnownHostsFile=\(knownHostsPath)"
+            "-o", "UserKnownHostsFile=\(knownHostsPath)",
         ]
 
         let auth = try buildAuth(profile: profile, secrets: secrets)
@@ -180,16 +187,21 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
         if value.contains("host key verification failed") {
             return SFTPError.hostKeyUntrusted
         }
-        if value.contains("could not resolve hostname") || value.contains("connection timed out") || value.contains("no route to host") {
+        if value.contains("could not resolve hostname") || value.contains("connection timed out")
+            || value.contains("no route to host")
+        {
             return SFTPError.networkFailure
         }
-        if value.contains("authentication failed") || value.contains("permission denied (publickey") {
+        if value.contains("authentication failed") || value.contains("permission denied (publickey")
+        {
             return SFTPError.authenticationFailed
         }
         return SFTPError.operationFailed(stderr.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
-    private func buildAuth(profile: ServerProfile, secrets: ServerSecrets) throws -> (arguments: [String], environment: [String: String], cleanup: () -> Void) {
+    private func buildAuth(profile: ServerProfile, secrets: ServerSecrets) throws -> (
+        arguments: [String], environment: [String: String], cleanup: () -> Void
+    ) {
         var args: [String] = []
         var environment: [String: String] = [:]
         var cleanupPaths: [String] = []
@@ -199,9 +211,12 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
             if let path = profile.privateKeyPath, !path.isEmpty {
                 args += ["-i", path]
             } else if let privateKey = secrets.privateKey, !privateKey.isEmpty {
-                let tempPath = FileManager.default.temporaryDirectory.appendingPathComponent("sftpslim-key-\(UUID().uuidString)").path
+                let tempPath = FileManager.default.temporaryDirectory.appendingPathComponent(
+                    "sftpslim-key-\(UUID().uuidString)"
+                ).path
                 try privateKey.write(toFile: tempPath, atomically: true, encoding: .utf8)
-                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tempPath)
+                try FileManager.default.setAttributes(
+                    [.posixPermissions: 0o600], ofItemAtPath: tempPath)
                 args += ["-i", tempPath]
                 cleanupPaths.append(tempPath)
             } else {
@@ -225,7 +240,10 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
                 throw SFTPError.authenticationFailed
             }
             let askpass = try makeAskpassScript()
-            args += ["-o", "BatchMode=no", "-o", "PreferredAuthentications=password,keyboard-interactive"]
+            args += [
+                "-o", "BatchMode=no", "-o",
+                "PreferredAuthentications=password,keyboard-interactive",
+            ]
             environment["SSH_ASKPASS"] = askpass
             environment["SSH_ASKPASS_REQUIRE"] = "force"
             environment["DISPLAY"] = "1"
@@ -243,7 +261,9 @@ actor OpenSSHSFTPClient: SFTPClientProtocol {
     }
 
     private func makeAskpassScript() throws -> String {
-        let path = FileManager.default.temporaryDirectory.appendingPathComponent("sftpslim-askpass-\(UUID().uuidString).sh").path
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "sftpslim-askpass-\(UUID().uuidString).sh"
+        ).path
         let script = "#!/bin/sh\necho \"$SFTPSLIM_ASKPASS_VALUE\"\n"
         try script.write(toFile: path, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: path)

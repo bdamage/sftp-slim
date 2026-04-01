@@ -10,7 +10,8 @@ final class KnownHostsService {
     let knownHostsPath: String
 
     init() {
-        let sshDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh", isDirectory: true)
+        let sshDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+            ".ssh", isDirectory: true)
         try? FileManager.default.createDirectory(at: sshDir, withIntermediateDirectories: true)
         self.knownHostsPath = sshDir.appendingPathComponent("known_hosts").path
         if !FileManager.default.fileExists(atPath: knownHostsPath) {
@@ -35,14 +36,18 @@ final class KnownHostsService {
         let line = scan.stdout
             .split(separator: "\n")
             .map(String.init)
-            .first { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") && !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .first {
+                !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#")
+                    && !$0.trimmingCharacters(in: .whitespaces).isEmpty
+            }
 
         guard let knownHostsLine = line else {
             throw SFTPError.operationFailed("Unable to obtain host key from server.")
         }
 
         let fingerprint = try await fingerprintForLine(knownHostsLine)
-        return HostKeyVerification(host: host, fingerprint: fingerprint, knownHostsLine: knownHostsLine)
+        return HostKeyVerification(
+            host: host, fingerprint: fingerprint, knownHostsLine: knownHostsLine)
     }
 
     func trust(knownHostsLine: String) throws {
@@ -66,7 +71,9 @@ final class KnownHostsService {
         for line in content.split(separator: "\n") {
             let value = String(line)
             if value.hasPrefix("#") || value.isEmpty { continue }
-            if value.hasPrefix(hostToken + " ") || value.hasPrefix(host + ",") || value.hasPrefix(host + " ") {
+            if value.hasPrefix(hostToken + " ") || value.hasPrefix(host + ",")
+                || value.hasPrefix(host + " ")
+            {
                 return true
             }
         }

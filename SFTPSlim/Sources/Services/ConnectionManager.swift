@@ -80,11 +80,15 @@ final class ConnectionManager: ObservableObject {
         try await client.delete(path: path, recursive: recursive)
     }
 
-    func upload(localPath: String, remotePath: String, progress: @escaping (Int64, Int64) -> Void) async throws {
+    func upload(localPath: String, remotePath: String, progress: @escaping (Int64, Int64) -> Void)
+        async throws
+    {
         try await client.upload(localPath: localPath, remotePath: remotePath, progress: progress)
     }
 
-    func download(remotePath: String, localPath: String, progress: @escaping (Int64, Int64) -> Void) async throws {
+    func download(remotePath: String, localPath: String, progress: @escaping (Int64, Int64) -> Void)
+        async throws
+    {
         try await client.download(remotePath: remotePath, localPath: localPath, progress: progress)
     }
 
@@ -106,14 +110,17 @@ final class ConnectionManager: ObservableObject {
     }
 
     private func verifyHostTrust(for profile: ServerProfile) async throws {
-        let needed = try await knownHostsService.verificationNeeded(host: profile.host, port: profile.port)
+        let needed = try await knownHostsService.verificationNeeded(
+            host: profile.host, port: profile.port)
         guard let needed else {
             return
         }
 
         pendingKnownHostsLine = needed.knownHostsLine
-        pendingHostKeyChallenge = HostKeyChallenge(host: needed.host, fingerprint: needed.fingerprint)
-        let accepted = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+        pendingHostKeyChallenge = HostKeyChallenge(
+            host: needed.host, fingerprint: needed.fingerprint)
+        let accepted = await withCheckedContinuation {
+            (continuation: CheckedContinuation<Bool, Never>) in
             hostKeyDecisionContinuation = continuation
         }
 
