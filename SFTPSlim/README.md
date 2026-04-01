@@ -24,6 +24,13 @@ Native-feeling macOS SFTP client MVP built with SwiftUI and MVVM.
 2. Select the `SFTPSlim` scheme.
 3. Build and run.
 
+## Build and Run (No Terminal)
+
+1. Open `SFTPSlim` in Finder.
+2. Double-click `run-sftpslim.command`.
+
+This launcher always switches into the correct folder, builds once if needed, and runs the app executable.
+
 ## Notes on SFTP Library
 
 The project now uses `OpenSSHSFTPClient` (system `ssh`/`scp`) as the active transport backend.

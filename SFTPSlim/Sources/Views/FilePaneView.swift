@@ -67,6 +67,10 @@ struct FilePaneView: View {
                             Image(systemName: item.isDirectory ? "folder" : "doc")
                             Text(item.name)
                         }
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) {
+                            Task { await pane.navigate(into: item) }
+                        }
                         .contextMenu {
                             if item.isDirectory {
                                 Button("Open") { Task { await pane.navigate(into: item) } }
@@ -93,11 +97,6 @@ struct FilePaneView: View {
                     }
                     TableColumn("Modified") { item in
                         Text(item.modifiedAt, style: .date)
-                    }
-                }
-                .onTapGesture(count: 2) {
-                    if let item = pane.selectedItem {
-                        Task { await pane.navigate(into: item) }
                     }
                 }
             }

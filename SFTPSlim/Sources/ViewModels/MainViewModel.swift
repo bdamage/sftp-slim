@@ -53,16 +53,24 @@ final class MainViewModel: ObservableObject {
         persistState()
     }
 
-    func restoreLastPaths(for server: ServerProfile?) {
+    func restoreLastPaths(for server: ServerProfile?, preferProfileDefaultRemotePath: Bool = false) {
         guard let server else { return }
         if let local = lastLocalPathByServer[server.id] {
             localPane.currentPath = local
         }
-        if let remote = lastRemotePathByServer[server.id] {
+        if preferProfileDefaultRemotePath {
+            remotePane.currentPath = normalizedRemotePath(server.defaultRemotePath)
+        } else if let remote = lastRemotePathByServer[server.id] {
             remotePane.currentPath = remote
         } else {
-            remotePane.currentPath = server.defaultRemotePath
+            remotePane.currentPath = normalizedRemotePath(server.defaultRemotePath)
         }
+    }
+
+    private func normalizedRemotePath(_ path: String) -> String {
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "/" }
+        return trimmed.hasPrefix("/") ? trimmed : "/\(trimmed)"
     }
 
     func createLocalFolder(path: String) async {

@@ -111,7 +111,10 @@ struct MainWindowView: View {
                         Button("Connect") {
                             Task {
                                 await serverVM.connectSelected()
-                                mainVM.restoreLastPaths(for: serverVM.selectedServer)
+                                mainVM.restoreLastPaths(
+                                    for: serverVM.selectedServer,
+                                    preferProfileDefaultRemotePath: true
+                                )
                                 await mainVM.loadPaneData()
                             }
                         }
