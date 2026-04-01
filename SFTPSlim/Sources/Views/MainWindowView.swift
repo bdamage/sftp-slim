@@ -8,8 +8,12 @@ struct MainWindowView: View {
 
     init(container: AppContainer) {
         self._container = ObservedObject(wrappedValue: container)
-        _serverVM = StateObject(wrappedValue: ServerListViewModel(store: container.serverStore, keychain: container.keychain, connectionManager: container.connectionManager))
-        _mainVM = StateObject(wrappedValue: MainViewModel(connectionManager: container.connectionManager))
+        _serverVM = StateObject(
+            wrappedValue: ServerListViewModel(
+                store: container.serverStore, keychain: container.keychain,
+                connectionManager: container.connectionManager))
+        _mainVM = StateObject(
+            wrappedValue: MainViewModel(connectionManager: container.connectionManager))
     }
 
     var body: some View {
@@ -30,9 +34,13 @@ struct MainWindowView: View {
                         onRequestTransfer: { item, isRemote in
                             guard container.connectionManager.isConnected else { return }
                             if isRemote {
-                                mainVM.requestDownload(item: item, connection: container.connectionManager, transfer: container.transferManager)
+                                mainVM.requestDownload(
+                                    item: item, connection: container.connectionManager,
+                                    transfer: container.transferManager)
                             } else {
-                                mainVM.requestUpload(item: item, connection: container.connectionManager, transfer: container.transferManager)
+                                mainVM.requestUpload(
+                                    item: item, connection: container.connectionManager,
+                                    transfer: container.transferManager)
                             }
                         },
                         onRequestRename: { item, isRemote in
@@ -48,13 +56,17 @@ struct MainWindowView: View {
 
                     VStack(spacing: 12) {
                         Button("Upload →") {
-                            mainVM.uploadSelected(connection: container.connectionManager, transfer: container.transferManager)
+                            mainVM.uploadSelected(
+                                connection: container.connectionManager,
+                                transfer: container.transferManager)
                         }
                         .disabled(!container.connectionManager.isConnected)
                         .keyboardShortcut("u", modifiers: [.command])
 
                         Button("← Download") {
-                            mainVM.downloadSelected(connection: container.connectionManager, transfer: container.transferManager)
+                            mainVM.downloadSelected(
+                                connection: container.connectionManager,
+                                transfer: container.transferManager)
                         }
                         .disabled(!container.connectionManager.isConnected)
                         .keyboardShortcut("d", modifiers: [.command])
@@ -72,9 +84,13 @@ struct MainWindowView: View {
                         onRequestTransfer: { item, isRemote in
                             guard container.connectionManager.isConnected else { return }
                             if isRemote {
-                                mainVM.requestDownload(item: item, connection: container.connectionManager, transfer: container.transferManager)
+                                mainVM.requestDownload(
+                                    item: item, connection: container.connectionManager,
+                                    transfer: container.transferManager)
                             } else {
-                                mainVM.requestUpload(item: item, connection: container.connectionManager, transfer: container.transferManager)
+                                mainVM.requestUpload(
+                                    item: item, connection: container.connectionManager,
+                                    transfer: container.transferManager)
                             }
                         },
                         onRequestRename: { item, isRemote in
@@ -139,10 +155,13 @@ struct MainWindowView: View {
             .onChange(of: mainVM.remotePane.currentPath) { _, _ in
                 mainVM.saveLastPaths(for: serverVM.selectedServer)
             }
-            .alert("Connection Error", isPresented: Binding(
-                get: { serverVM.uiError != nil },
-                set: { if !$0 { serverVM.uiError = nil } }
-            )) {
+            .alert(
+                "Connection Error",
+                isPresented: Binding(
+                    get: { serverVM.uiError != nil },
+                    set: { if !$0 { serverVM.uiError = nil } }
+                )
+            ) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(serverVM.uiError ?? "")
@@ -150,7 +169,8 @@ struct MainWindowView: View {
             .sheet(isPresented: $serverVM.isPresentingEditor) {
                 ServerEditorView(
                     existing: serverVM.editingServer,
-                    existingSecrets: serverVM.editingServer.map { serverVM.secrets(for: $0) } ?? ServerSecrets(),
+                    existingSecrets: serverVM.editingServer.map { serverVM.secrets(for: $0) }
+                        ?? ServerSecrets(),
                     onSave: { server, secrets in
                         serverVM.saveServer(server, secrets: secrets)
                     }
@@ -168,12 +188,17 @@ struct MainWindowView: View {
                     mainVM.pendingDeleteItem = nil
                 }
             } message: {
-                Text("Are you sure you want to delete \(mainVM.pendingDeleteItem?.name ?? "this item")?")
+                Text(
+                    "Are you sure you want to delete \(mainVM.pendingDeleteItem?.name ?? "this item")?"
+                )
             }
-            .alert("Trust Server Host Key?", isPresented: Binding(
-                get: { container.connectionManager.pendingHostKeyChallenge != nil },
-                set: { _ in }
-            )) {
+            .alert(
+                "Trust Server Host Key?",
+                isPresented: Binding(
+                    get: { container.connectionManager.pendingHostKeyChallenge != nil },
+                    set: { _ in }
+                )
+            ) {
                 Button("Trust") {
                     container.connectionManager.acceptPendingHostKey()
                 }
@@ -194,7 +219,10 @@ struct MainWindowView: View {
                         Spacer()
                         Button("Cancel") { mainVM.showCreateFolderSheet = false }
                         Button("Create") {
-                            Task { await mainVM.confirmCreateFolder(connection: container.connectionManager) }
+                            Task {
+                                await mainVM.confirmCreateFolder(
+                                    connection: container.connectionManager)
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                     }
@@ -212,7 +240,9 @@ struct MainWindowView: View {
                         Spacer()
                         Button("Cancel") { mainVM.showRenameSheet = false }
                         Button("Rename") {
-                            Task { await mainVM.confirmRename(connection: container.connectionManager) }
+                            Task {
+                                await mainVM.confirmRename(connection: container.connectionManager)
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                     }
@@ -230,7 +260,9 @@ struct MainWindowView: View {
                         Spacer()
                         Button("Cancel") { mainVM.showMoveSheet = false }
                         Button("Move") {
-                            Task { await mainVM.confirmMove(connection: container.connectionManager) }
+                            Task {
+                                await mainVM.confirmMove(connection: container.connectionManager)
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                     }

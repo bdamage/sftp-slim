@@ -55,8 +55,10 @@ struct FilePaneView: View {
                 ProgressView("Loading...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = pane.errorMessage {
-                ContentUnavailableView("Error", systemImage: "exclamationmark.triangle", description: Text(error))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ContentUnavailableView(
+                    "Error", systemImage: "exclamationmark.triangle", description: Text(error)
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if pane.displayedItems.isEmpty {
                 ContentUnavailableView("Empty folder", systemImage: "folder")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -90,10 +92,18 @@ struct FilePaneView: View {
                         }
                     }
                     TableColumn("Size") { item in
-                        Text(item.isDirectory ? "-" : ByteCountFormatter.string(fromByteCount: item.size, countStyle: .file))
+                        Text(
+                            item.isDirectory
+                                ? "-"
+                                : ByteCountFormatter.string(
+                                    fromByteCount: item.size, countStyle: .file))
                     }
                     TableColumn("Type") { item in
-                        Text(item.isDirectory ? "Folder" : (item.fileExtension.isEmpty ? "File" : item.fileExtension.uppercased()))
+                        Text(
+                            item.isDirectory
+                                ? "Folder"
+                                : (item.fileExtension.isEmpty
+                                    ? "File" : item.fileExtension.uppercased()))
                     }
                     TableColumn("Modified") { item in
                         Text(item.modifiedAt, style: .date)

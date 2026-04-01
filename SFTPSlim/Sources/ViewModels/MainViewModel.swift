@@ -36,8 +36,10 @@ final class MainViewModel: ObservableObject {
 
     init(connectionManager: ConnectionManager) {
         let start = FileManager.default.homeDirectoryForCurrentUser.path
-        self.localPane = FilePaneViewModel(kind: .local, initialPath: start, connectionManager: connectionManager)
-        self.remotePane = FilePaneViewModel(kind: .remote, initialPath: "/", connectionManager: connectionManager)
+        self.localPane = FilePaneViewModel(
+            kind: .local, initialPath: start, connectionManager: connectionManager)
+        self.remotePane = FilePaneViewModel(
+            kind: .remote, initialPath: "/", connectionManager: connectionManager)
         loadPersistedState()
     }
 
@@ -53,7 +55,8 @@ final class MainViewModel: ObservableObject {
         persistState()
     }
 
-    func restoreLastPaths(for server: ServerProfile?, preferProfileDefaultRemotePath: Bool = false) {
+    func restoreLastPaths(for server: ServerProfile?, preferProfileDefaultRemotePath: Bool = false)
+    {
         guard let server else { return }
         if let local = lastLocalPathByServer[server.id] {
             localPane.currentPath = local
@@ -183,23 +186,38 @@ final class MainViewModel: ObservableObject {
 
     func uploadSelected(connection: ConnectionManager, transfer: TransferManager) {
         guard let item = localPane.selectedItem else { return }
-        let destination = URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path
-        transfer.enqueueUpload(localPath: item.path, remotePath: destination, size: max(item.size, 1), connection: connection)
+        let destination = URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(
+            item.name
+        ).path
+        transfer.enqueueUpload(
+            localPath: item.path, remotePath: destination, size: max(item.size, 1),
+            connection: connection)
     }
 
     func downloadSelected(connection: ConnectionManager, transfer: TransferManager) {
         guard let item = remotePane.selectedItem else { return }
-        let destination = URL(fileURLWithPath: localPane.currentPath).appendingPathComponent(item.name).path
-        transfer.enqueueDownload(remotePath: item.path, localPath: destination, size: max(item.size, 1), connection: connection)
+        let destination = URL(fileURLWithPath: localPane.currentPath).appendingPathComponent(
+            item.name
+        ).path
+        transfer.enqueueDownload(
+            remotePath: item.path, localPath: destination, size: max(item.size, 1),
+            connection: connection)
     }
 
     func requestUpload(item: FileItem, connection: ConnectionManager, transfer: TransferManager) {
         Task {
             if item.isDirectory {
-                enqueueRecursiveUpload(localRoot: item.path, remoteRoot: URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path, connection: connection, transfer: transfer)
+                enqueueRecursiveUpload(
+                    localRoot: item.path,
+                    remoteRoot: URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(
+                        item.name
+                    ).path, connection: connection, transfer: transfer)
             } else {
-                let destination = URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path
-                transfer.enqueueUpload(localPath: item.path, remotePath: destination, size: max(item.size, 1), connection: connection)
+                let destination = URL(fileURLWithPath: remotePane.currentPath)
+                    .appendingPathComponent(item.name).path
+                transfer.enqueueUpload(
+                    localPath: item.path, remotePath: destination, size: max(item.size, 1),
+                    connection: connection)
             }
         }
     }
@@ -207,17 +225,30 @@ final class MainViewModel: ObservableObject {
     func requestDownload(item: FileItem, connection: ConnectionManager, transfer: TransferManager) {
         Task {
             if item.isDirectory {
-                await enqueueRecursiveDownload(remoteRoot: item.path, localRoot: URL(fileURLWithPath: localPane.currentPath).appendingPathComponent(item.name).path, connection: connection, transfer: transfer)
+                await enqueueRecursiveDownload(
+                    remoteRoot: item.path,
+                    localRoot: URL(fileURLWithPath: localPane.currentPath).appendingPathComponent(
+                        item.name
+                    ).path, connection: connection, transfer: transfer)
             } else {
-                let destination = URL(fileURLWithPath: localPane.currentPath).appendingPathComponent(item.name).path
-                transfer.enqueueDownload(remotePath: item.path, localPath: destination, size: max(item.size, 1), connection: connection)
+                let destination = URL(fileURLWithPath: localPane.currentPath)
+                    .appendingPathComponent(item.name).path
+                transfer.enqueueDownload(
+                    remotePath: item.path, localPath: destination, size: max(item.size, 1),
+                    connection: connection)
             }
         }
     }
 
-    private func enqueueRecursiveUpload(localRoot: String, remoteRoot: String, connection: ConnectionManager, transfer: TransferManager) {
+    private func enqueueRecursiveUpload(
+        localRoot: String, remoteRoot: String, connection: ConnectionManager,
+        transfer: TransferManager
+    ) {
         let rootURL = URL(fileURLWithPath: localRoot)
-        guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey]) else {
+        guard
+            let enumerator = fileManager.enumerator(
+                at: rootURL, includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey])
+        else {
             return
         }
 
@@ -226,7 +257,8 @@ final class MainViewModel: ObservableObject {
             if values?.isDirectory == true {
                 continue
             }
-            let relative = fileURL.path.replacingOccurrences(of: localRoot, with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let relative = fileURL.path.replacingOccurrences(of: localRoot, with: "")
+                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             let remotePath = URL(fileURLWithPath: remoteRoot).appendingPathComponent(relative).path
             transfer.enqueueUpload(
                 localPath: fileURL.path,
@@ -237,24 +269,37 @@ final class MainViewModel: ObservableObject {
         }
     }
 
-    private func enqueueRecursiveDownload(remoteRoot: String, localRoot: String, connection: ConnectionManager, transfer: TransferManager) async {
+    private func enqueueRecursiveDownload(
+        remoteRoot: String, localRoot: String, connection: ConnectionManager,
+        transfer: TransferManager
+    ) async {
         do {
             try fileManager.createDirectory(atPath: localRoot, withIntermediateDirectories: true)
-            try await enqueueRemoteDirectory(remotePath: remoteRoot, localPath: localRoot, connection: connection, transfer: transfer)
+            try await enqueueRemoteDirectory(
+                remotePath: remoteRoot, localPath: localRoot, connection: connection,
+                transfer: transfer)
         } catch {
             localPane.errorMessage = error.localizedDescription
         }
     }
 
-    private func enqueueRemoteDirectory(remotePath: String, localPath: String, connection: ConnectionManager, transfer: TransferManager) async throws {
+    private func enqueueRemoteDirectory(
+        remotePath: String, localPath: String, connection: ConnectionManager,
+        transfer: TransferManager
+    ) async throws {
         let children = try await connection.listRemote(path: remotePath)
         for child in children {
             let localChild = URL(fileURLWithPath: localPath).appendingPathComponent(child.name).path
             if child.isDirectory {
-                try fileManager.createDirectory(atPath: localChild, withIntermediateDirectories: true)
-                try await enqueueRemoteDirectory(remotePath: child.path, localPath: localChild, connection: connection, transfer: transfer)
+                try fileManager.createDirectory(
+                    atPath: localChild, withIntermediateDirectories: true)
+                try await enqueueRemoteDirectory(
+                    remotePath: child.path, localPath: localChild, connection: connection,
+                    transfer: transfer)
             } else {
-                transfer.enqueueDownload(remotePath: child.path, localPath: localChild, size: max(child.size, 1), connection: connection)
+                transfer.enqueueDownload(
+                    remotePath: child.path, localPath: localChild, size: max(child.size, 1),
+                    connection: connection)
             }
         }
     }
@@ -292,11 +337,13 @@ final class MainViewModel: ObservableObject {
 
     private func loadPersistedState() {
         if let localData = defaults.data(forKey: "lastLocalPathByServer"),
-           let local = try? JSONDecoder().decode([UUID: String].self, from: localData) {
+            let local = try? JSONDecoder().decode([UUID: String].self, from: localData)
+        {
             lastLocalPathByServer = local
         }
         if let remoteData = defaults.data(forKey: "lastRemotePathByServer"),
-           let remote = try? JSONDecoder().decode([UUID: String].self, from: remoteData) {
+            let remote = try? JSONDecoder().decode([UUID: String].self, from: remoteData)
+        {
             lastRemotePathByServer = remote
         }
     }
