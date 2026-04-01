@@ -188,7 +188,7 @@ final class MainViewModel: ObservableObject {
     func requestUpload(item: FileItem, connection: ConnectionManager, transfer: TransferManager) {
         Task {
             if item.isDirectory {
-                await enqueueRecursiveUpload(localRoot: item.path, remoteRoot: URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path, connection: connection, transfer: transfer)
+                enqueueRecursiveUpload(localRoot: item.path, remoteRoot: URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path, connection: connection, transfer: transfer)
             } else {
                 let destination = URL(fileURLWithPath: remotePane.currentPath).appendingPathComponent(item.name).path
                 transfer.enqueueUpload(localPath: item.path, remotePath: destination, size: max(item.size, 1), connection: connection)
@@ -207,7 +207,7 @@ final class MainViewModel: ObservableObject {
         }
     }
 
-    private func enqueueRecursiveUpload(localRoot: String, remoteRoot: String, connection: ConnectionManager, transfer: TransferManager) async {
+    private func enqueueRecursiveUpload(localRoot: String, remoteRoot: String, connection: ConnectionManager, transfer: TransferManager) {
         let rootURL = URL(fileURLWithPath: localRoot)
         guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey]) else {
             return

@@ -9,9 +9,13 @@ Native-feeling macOS SFTP client MVP built with SwiftUI and MVVM.
 - Dual-pane browser UI (local + remote)
 - Sorting, navigation, refresh, context menus
 - Upload/download actions and transfer queue
+- Recursive folder upload/download queueing
 - Transfer progress, speed, ETA, status, and cancellation
-- Remote operations scaffolding: mkdir, rename, delete, move
+- Remote/local operations: mkdir, rename, move, delete
+- Confirmation for destructive actions (server and file delete)
+- First-connect host-key trust prompt (TOFU)
 - Persistent app state for last local/remote directory per server
+- Keyboard shortcuts for common actions
 - Basic structured logging with secret redaction discipline
 
 ## Build and Run (Xcode)
@@ -29,12 +33,13 @@ For production SFTP, wire `ConnectionManager` to a real client implementation us
 
 - Password/private key/passphrase are stored only in Keychain.
 - Secrets are not written to logs.
-- Host trust flow is represented by `HostKeyTrustStore` and should be connected to real host key fingerprints in the production client.
+- Host trust prompt is implemented with trust-on-first-use behavior backed by `HostKeyTrustStore`.
+- For production, replace demo fingerprints with real server key fingerprints and persist in known_hosts-compatible storage.
 
 ## Suggested Next Steps
 
 - Replace mock client with real SFTP transport
-- Add known_hosts parser and host-key prompt UX
+- Add known_hosts parser/serializer compatibility
 - Add resumable transfer support
 - Add Quick Look for local files
 - Add menu bar recent connections
